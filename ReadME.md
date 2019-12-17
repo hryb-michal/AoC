@@ -1,0 +1,1 @@
+My solutions to consecutive tasks from https://adventofcode.com/2019/
