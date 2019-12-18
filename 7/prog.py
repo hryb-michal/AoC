@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import os
-
+import itertools
 input_file = open('input.txt', 'r')
 intcode = input_file.read()
 base_arr = [int(s) for s in intcode.split(',')]
@@ -19,11 +18,11 @@ DE - two-digit opcode,      02 == opcode 2
 '''
 
 class IntcodeParser:
-	index = 0 #inputs provided to program so far
-	step_val = 0
+	index = 0 #ind of inputs provided to program so far
 	output_value = 0
 	opcode = 0
-	pos = 0
+	pos = 0 	#current position in array
+	step_val = 0	#current next step value
 	step_values = { 1: 4,   #step value depending on opcode value
 				    2: 4,
 				    3: 2,
@@ -42,7 +41,6 @@ class IntcodeParser:
 			return self.arr[position]
 		if(mode == 0): #position mode
 			return self.arr[self.arr[position]]
-
 
 	def step(self, pos):
 		#print("\n")
@@ -65,16 +63,18 @@ class IntcodeParser:
 			res = self.value_by_mode(modes[2], pos+1) + self.value_by_mode(modes[1], pos+2)
 			self.arr[self.arr[pos+3]] = res
 
-		elif(self.opcode == 2):
+		elif(self.opcode == 2): #multiply two next values
 			#print(self.arr[pos:pos+4])
 			self.arr[self.arr[pos+3]] = self.value_by_mode(modes[2], pos+1) * self.value_by_mode(modes[1], pos+2)
 		
-		elif(self.opcode == 3):
+		elif(self.opcode == 3): #read input and store it to next value
+			#print("current input:", self.input_value[self.index])
 			self.arr[self.arr[pos+1]] = self.input_value[self.index]
-			
-		elif(self.opcode == 4):
+			self.index += 1
+
+		elif(self.opcode == 4): #store output to next value
 			self.output_value = self.value_by_mode(modes[2], pos+1)
-			print(self.output_value)
+			#print(self.output_value)
 
 		elif(self.opcode == 5):
 			#print("jump-if-true:", self.arr[pos:pos+3])
@@ -112,21 +112,32 @@ class IntcodeParser:
 		while(self.step(self.pos)):
 			self.pos += self.step_val
 
+base_phases = [0, 1, 2, 3, 4]
+permutations = itertools.permutations(base_phases)
+highest_output = 0
 
-test_arr = [3,23,3,24,1002,24,10,24,1002,23,-1,23,
-101,5,23,23,1,24,23,23,4,23,99,0,0]
+for phases in list(permutations):
+	next_param = 0
+	for phase in phases:
+		Amplifier = IntcodeParser(base_arr, phase, next_param) #solution for part 2
+		Amplifier.run()
+		next_param = Amplifier.output_value
+	if(next_param > highest_output):
+		highest_output = next_param
+print("Part 1:", highest_output)
 
-Amplifier1 = IntcodeParser(test_arr, 0, 0) #solution for part 2
-Amplifier1.run()
 
-Amplifier2 = IntcodeParser(test_arr, 1, Amplifier1.output_value)
-Amplifier2.run()
+base_phases = [5, 6, 7, 8, 9]
+permutations = itertools.permutations(base_phases)
+highest_output = 0
 
-Amplifier3 = IntcodeParser(test_arr, 2, Amplifier2.output_value)
-Amplifier3.run()
+for phases in list(permutations):
+	next_param = 0
 
-Amplifier4 = IntcodeParser(test_arr, 3, Amplifier3.output_value)
-Amplifier4.run()
-
-Amplifier5 = IntcodeParser(test_arr, 4, Amplifier4.output_value)
-Amplifier5.run()
+	for phase in phases:
+		Amplifier = IntcodeParser(base_arr, phase, next_param) #solution for part 2
+		Amplifier.run()
+		next_param = Amplifier.output_value
+	if(next_param > highest_output):
+		highest_output = next_param
+print("Part 1:", highest_output)
